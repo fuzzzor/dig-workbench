@@ -1,0 +1,17 @@
+services:
+  dig-workbench:
+    build: .
+    image: dig-workbench:local
+    container_name: dig-workbench
+    environment:
+      DEFAULT_DNS_SERVER: ${DEFAULT_DNS_SERVER:-}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
