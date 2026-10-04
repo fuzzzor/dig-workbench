@@ -237,7 +237,8 @@ function App() {
     setOptions((current) => ({ ...current, [key]: value }))
   }
 
-  const reverseIpQuery = options.type === 'PTR' && isIpAddress(options.name)
+  const ptrQuery = options.type === 'PTR'
+  const reverseIpQuery = ptrQuery && isIpAddress(options.name)
   const commandPreview = [
     'dig', '-p', String(options.port), `+time=${options.timeout}`, `+tries=${options.retries}`,
     options.recursion ? '+recurse' : '+norecurse',
@@ -311,14 +312,14 @@ function App() {
 
   const copyResult = () => {
     if (!result) return
-    const columns = reverseIpQuery
-      ? [text.ptrIp, text.ttl, text.class, text.type, text.hostname]
+    const columns = ptrQuery
+      ? [text.name, text.ttl, text.class, text.type, text.hostname]
       : [text.name, text.ttl, text.class, text.type, text.value]
     const content = showRaw
       ? result.output
       : [
           columns.join('\t'),
-          ...result.records.map((record) => [reverseIpQuery ? options.name : record.name, record.ttl, record.dnsClass, record.type, record.value].join('\t')),
+          ...result.records.map((record) => [record.name, record.ttl, record.dnsClass, record.type, record.value].join('\t')),
         ].join('\n')
     void copyText(content, 'result')
   }
@@ -387,7 +388,7 @@ function App() {
               {busy && <div className="loading-results"><LoaderCircle className="spin" size={20} /><span>{text.querying(options.server)}</span></div>}
               {result && <div className="result-body">
                 <div className="result-tabs"><button type="button" className={!showRaw ? 'active' : ''} onClick={() => setShowRaw(false)}>{text.recordsTab} <span>{result.records.length}</span></button><button type="button" className={showRaw ? 'active' : ''} onClick={() => setShowRaw(true)}>{text.rawTab}</button></div>
-                {showRaw ? <pre className="raw-output">{result.output || (language === 'en' ? 'No output.' : 'Aucune sortie.')}</pre> : result.records.length > 0 ? <div className="records-table-wrap"><table className="records-table"><thead><tr>{reverseIpQuery ? <><th>{text.ptrIp}</th><th>{text.ttl}</th><th>{text.class}</th><th>{text.type}</th><th>{text.hostname}</th></> : <><th>{text.name}</th><th>{text.ttl}</th><th>{text.class}</th><th>{text.type}</th><th>{text.value}</th></>}</tr></thead><tbody>{result.records.map((record, index) => <tr key={`${record.name}-${index}`}><td>{reverseIpQuery ? options.name : record.name}</td><td>{record.ttl}</td><td>{record.dnsClass}</td><td><span className="type-tag">{record.type}</span></td><td className="record-value">{record.value}</td></tr>)}</tbody></table></div> : <div className="no-records"><span>∅</span>{options.type === 'CNAME' ? <><p>{text.noCname(options.name)}</p><small>{text.cnameNote}</small></> : <p>{text.noRecords(options.type)}</p>}<button type="button" onClick={() => setShowRaw(true)}>{text.viewFullOutput} <ArrowDownToLine size={13} /></button></div>}
+                {showRaw ? <pre className="raw-output">{result.output || (language === 'en' ? 'No output.' : 'Aucune sortie.')}</pre> : result.records.length > 0 ? <div className="records-table-wrap"><table className="records-table"><thead><tr>{ptrQuery ? <><th>{text.name}</th><th>{text.ttl}</th><th>{text.class}</th><th>{text.type}</th><th>{text.hostname}</th></> : <><th>{text.name}</th><th>{text.ttl}</th><th>{text.class}</th><th>{text.type}</th><th>{text.value}</th></>}</tr></thead><tbody>{result.records.map((record, index) => <tr key={`${record.name}-${index}`}><td>{record.name}</td><td>{record.ttl}</td><td>{record.dnsClass}</td><td><span className="type-tag">{record.type}</span></td><td className="record-value">{record.value}</td></tr>)}</tbody></table></div> : <div className="no-records"><span>∅</span>{options.type === 'CNAME' ? <><p>{text.noCname(options.name)}</p><small>{text.cnameNote}</small></> : <p>{text.noRecords(options.type)}</p>}<button type="button" onClick={() => setShowRaw(true)}>{text.viewFullOutput} <ArrowDownToLine size={13} /></button></div>}
               </div>}
             </section>
           </section>
